@@ -4,6 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import re
 import pymysql
 from config.settings import Settings
 import logging
@@ -31,16 +32,35 @@ def run_migration():
         with open(sql_file, 'r', encoding='utf-8') as f:
             sql_script = f.read()
         
-        # Split by semicolon and execute each statement
-        statements = [s.strip() for s in sql_script.split(';') if s.strip()]
+        # Use configured DB_NAME instead of hardcoded name in SQL
+        sql_script = re.sub(
+            r'CREATE\s+DATABASE\s+IF\s+NOT\s+EXISTS\s+`?montrixa`?',
+            f"CREATE DATABASE IF NOT EXISTS `{Settings.DB_NAME}`",
+            sql_script,
+            flags=re.IGNORECASE
+        )
+        sql_script = re.sub(
+            r'USE\s+`?montrixa`?',
+            f"USE `{Settings.DB_NAME}`",
+            sql_script,
+            flags=re.IGNORECASE
+        )
         
-        for statement in statements:
-            if statement and not statement.startswith('--'):
-                try:
-                    cursor.execute(statement)
-                    logger.info(f"Executed: {statement[:50]}...")
-                except Exception as e:
-                    logger.warning(f"Statement failed (might already exist): {str(e)[:100]}")
+        # Remove single-line comments so CREATE TABLE etc. are not skipped
+        cleaned_lines = []
+        for line in sql_script.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith('--'):
+                continue
+            cleaned_lines.append(line)
+        
+        cleaned_script = '\n'.join(cleaned_lines)
+        statements = [s.strip() for s in cleaned_script.split(';') if s.strip()]
+        
+        for i, statement in enumerate(statements, start=1):
+            cursor.execute(statement)
+            preview = ' '.join(statement.split())[:80]
+            logger.info(f"[{i}/{len(statements)}] Executed: {preview}...")
         
         connection.commit()
         logger.info("✅ Database migration completed successfully!")

@@ -256,6 +256,8 @@ sudo kill -9 <PID>
 
 ## Production Deployment
 
+**Deploy di VPS (Bot + Mini App dengan Nginx & SSL):** lihat [VPS_DEPLOY.md](VPS_DEPLOY.md) untuk panduan step-by-step.
+
 ### Systemd Service (Linux)
 
 Buat file `/etc/systemd/system/montrixa.service`:
