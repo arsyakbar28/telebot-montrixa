@@ -20,20 +20,20 @@
       <main class="main">
         <!-- View: Home -->
         <div id="viewHome" class="view active">
-          <section class="card">
+          <section class="card card-balance">
             <div class="card-title">Saldo</div>
-            <div id="balanceRow" class="balance">
-              <div class="metric">
+            <div class="balance-hero">
+              <div class="balance-label">Saldo</div>
+              <div id="balanceVal" class="balance-value">-</div>
+            </div>
+            <div class="balance-row">
+              <div class="metric metric-income">
                 <div class="metric-label">Pemasukan</div>
                 <div id="incomeVal" class="metric-value">-</div>
               </div>
-              <div class="metric">
+              <div class="metric metric-expense">
                 <div class="metric-label">Pengeluaran</div>
                 <div id="expenseVal" class="metric-value">-</div>
-              </div>
-              <div class="metric metric-total">
-                <div class="metric-label">Saldo</div>
-                <div id="balanceVal" class="metric-value">-</div>
               </div>
             </div>
           </section>
@@ -42,11 +42,15 @@
             <div class="card-title">Catat Transaksi</div>
             <div class="action-buttons">
               <button id="btnAddIncome" class="action-btn income" type="button" data-type="income">
-                <span class="action-icon">📥</span>
+                <span class="action-icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2" fill="none"/><path d="M24 14v20M16 22l8-8 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
                 <span>Pemasukan</span>
               </button>
               <button id="btnAddExpense" class="action-btn expense" type="button" data-type="expense">
-                <span class="action-icon">📤</span>
+                <span class="action-icon" aria-hidden="true">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2" fill="none"/><path d="M24 34V14M16 26l8 8 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
                 <span>Pengeluaran</span>
               </button>
             </div>
