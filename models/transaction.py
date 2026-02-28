@@ -246,7 +246,7 @@ class Transaction:
         Returns:
             True if update successful, False otherwise
         """
-        allowed_fields = ['category_id', 'amount', 'description', 'transaction_date', 'notes']
+        allowed_fields = ['category_id', 'amount', 'description', 'transaction_date', 'notes', 'type']
         
         update_fields = []
         values = []

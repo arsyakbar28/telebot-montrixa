@@ -10,6 +10,7 @@ const viewHome = $("viewHome");
 const viewAnalytic = $("viewAnalytic");
 const viewTransaction = $("viewTransaction");
 const viewAddTx = $("viewAddTx");
+const viewTxDetail = $("viewTxDetail");
 
 const lastTxList = $("lastTxList");
 const txList = $("txList");
@@ -44,6 +45,21 @@ const breakdownEmpty = $("breakdownEmpty");
 const analyticTypeIncome = $("analyticTypeIncome");
 const analyticTypeExpense = $("analyticTypeExpense");
 const bottomNav = $("bottomNav");
+const btnBackTxDetail = $("btnBackTxDetail");
+const btnEditTx = $("btnEditTx");
+const btnDeleteTx = $("btnDeleteTx");
+const detailDate = $("detailDate");
+const detailType = $("detailType");
+const detailCategory = $("detailCategory");
+const detailAmount = $("detailAmount");
+const detailDesc = $("detailDesc");
+
+let lastTxData = [];
+let txListData = [];
+let selectedTx = null;
+let selectedTxId = null;
+let editingTxId = null;
+let tabBeforeDetail = "home";
 
 const fmt = new Intl.NumberFormat("id-ID");
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -110,8 +126,9 @@ function renderTxItem(t) {
   const cat = `${t.category_icon || ""} ${t.category_name || ""}`.trim();
   const dateStr = t.transaction_date ? String(t.transaction_date).slice(0, 10) : "";
   const desc = (t.description || "-").toString();
+  const id = t.id != null ? t.id : "";
   return `
-    <div class="tx">
+    <div class="tx" data-id="${id}" role="button" tabindex="0">
       <div class="tx-top">
         <div class="tx-amount ${cls}">${amount}</div>
         <div class="tx-meta">${formatDate(dateStr)}</div>
@@ -131,7 +148,7 @@ function renderTxList(container, items, showEmpty = true, emptyMsg = "Belum ada 
 }
 
 function showView(viewId) {
-  [viewHome, viewAnalytic, viewTransaction, viewAddTx].forEach((v) => {
+  [viewHome, viewAnalytic, viewTransaction, viewAddTx, viewTxDetail].forEach((v) => {
     if (v) v.classList.remove("active");
   });
   const v = $(viewId);
@@ -142,9 +159,9 @@ function showView(viewId) {
     el.classList.toggle("active", el.getAttribute("data-tab") === tabFromView);
   });
 
-  const isAdd = viewId === "viewAddTx";
+  const hideNav = viewId === "viewAddTx" || viewId === "viewTxDetail";
   const appEl = document.querySelector(".app");
-  if (appEl) appEl.classList.toggle("show-add", isAdd);
+  if (appEl) appEl.classList.toggle("show-add", hideNav);
 }
 
 function switchTab(tab, options = {}) {
@@ -166,6 +183,7 @@ function switchTab(tab, options = {}) {
 }
 
 function openAddTransaction(type) {
+  editingTxId = null;
   currentType = type;
   addTxType.value = type;
   if (txForm) txForm.dataset.type = type;
@@ -183,8 +201,40 @@ function openAddTransaction(type) {
 }
 
 function closeAddTransaction() {
-  // Jangan refetch: data sudah di-refresh setelah simpan; refetch bisa dapat cache lama dan timpa list.
+  if (editingTxId) {
+    editingTxId = null;
+    showView("viewTxDetail");
+    return;
+  }
   switchTab("home", { skipRefresh: true });
+}
+
+function fillTxDetail(tx) {
+  if (!tx) return;
+  const dateStr = tx.transaction_date ? String(tx.transaction_date).slice(0, 10) : "";
+  if (detailDate) detailDate.textContent = formatDate(dateStr) || "-";
+  if (detailType) detailType.textContent = tx.type === "income" ? "Pemasukan" : "Pengeluaran";
+  if (detailCategory) detailCategory.textContent = [tx.category_icon, tx.category_name].filter(Boolean).join(" ").trim() || "-";
+  if (detailAmount) {
+    detailAmount.textContent = (tx.type === "income" ? "+" : "−") + formatRp(Math.abs(Number(tx.amount || 0)));
+    detailAmount.className = "tx-detail-value tx-detail-amount " + (tx.type === "income" ? "income" : "expense");
+  }
+  if (detailDesc) detailDesc.textContent = (tx.description && tx.description !== "-") ? tx.description : "-";
+}
+
+function openTxDetail(tx) {
+  selectedTx = tx;
+  selectedTxId = tx.id;
+  tabBeforeDetail = currentTab;
+  fillTxDetail(tx);
+  showView("viewTxDetail");
+}
+
+function closeTxDetail() {
+  selectedTx = null;
+  selectedTxId = null;
+  const tab = tabBeforeDetail || "home";
+  switchTab(tab, { skipRefresh: true });
 }
 
 async function loadBalance() {
@@ -220,7 +270,8 @@ async function loadLast5() {
   const endStr = end.toISOString().slice(0, 10);
   const cacheBust = Date.now();
   const data = await apiFetch(`/api/transactions?start=${startStr}&end=${endStr}&limit=5&offset=0&_=${cacheBust}`);
-  renderTxList(lastTxList, data.transactions || [], true, "Belum ada transaksi.");
+  lastTxData = data.transactions || [];
+  renderTxList(lastTxList, lastTxData, true, "Belum ada transaksi.");
 }
 
 function getDateRange() {
@@ -248,6 +299,7 @@ async function loadTransactionList() {
   );
   const list = data.transactions || [];
   txTotal = data.total ?? 0;
+  txListData = list;
 
   if (txList) renderTxList(txList, list, false);
   if (txListEmpty) {
@@ -390,21 +442,38 @@ async function onSubmit(e) {
   btnSave.disabled = true;
   setStatus("Menyimpan...");
   try {
-    await apiFetch("/api/transaction", {
-      method: "POST",
-      body: JSON.stringify({
-        amount,
-        description,
-        category_id: categoryId,
-        type: currentType,
-      }),
-    });
-    setStatus("Tersimpan.", "ok");
-    amountInput.value = "";
-    descInput.value = "";
-    await Promise.all([loadBalance(), loadLast5()]);
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
-    closeAddTransaction();
+    if (editingTxId) {
+      await apiFetch(`/api/transaction/${editingTxId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          amount,
+          description,
+          category_id: categoryId,
+          type: currentType,
+        }),
+      });
+      setStatus("Transaksi diperbarui.", "ok");
+      editingTxId = null;
+      await Promise.all([loadBalance(), loadLast5(), loadTransactionList().catch(() => {})]);
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+      closeTxDetail();
+    } else {
+      await apiFetch("/api/transaction", {
+        method: "POST",
+        body: JSON.stringify({
+          amount,
+          description,
+          category_id: categoryId,
+          type: currentType,
+        }),
+      });
+      setStatus("Tersimpan.", "ok");
+      amountInput.value = "";
+      descInput.value = "";
+      await Promise.all([loadBalance(), loadLast5()]);
+      if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+      closeAddTransaction();
+    }
   } catch (err) {
     setStatus(err.message || "Gagal menyimpan.", "err");
     if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
@@ -443,6 +512,58 @@ function init() {
   if (btnAddIncome) btnAddIncome.addEventListener("click", () => openAddTransaction("income"));
   if (btnAddExpense) btnAddExpense.addEventListener("click", () => openAddTransaction("expense"));
   if (btnBackAddTx) btnBackAddTx.addEventListener("click", closeAddTransaction);
+
+  if (btnBackTxDetail) btnBackTxDetail.addEventListener("click", closeTxDetail);
+
+  if (btnEditTx) {
+    btnEditTx.addEventListener("click", () => {
+      if (!selectedTx) return;
+      editingTxId = selectedTxId;
+      currentType = selectedTx.type;
+      addTxType.value = selectedTx.type;
+      txForm.dataset.type = selectedTx.type;
+      addTxTitle.textContent = "Edit Transaksi";
+      addTxBanner.classList.remove("income", "expense");
+      addTxBanner.classList.add(selectedTx.type);
+      addTxBannerLabel.textContent = selectedTx.type === "income" ? "Pemasukan" : "Pengeluaran";
+      amountInput.value = String(selectedTx.amount || "").replace(/\./g, "");
+      descInput.value = (selectedTx.description && selectedTx.description !== "-") ? selectedTx.description : "";
+      loadCategories().then(() => {
+        if (categorySelect) categorySelect.value = selectedTx.category_id || "";
+      }).catch(() => {});
+      setStatus("");
+      showView("viewAddTx");
+    });
+  }
+
+  if (btnDeleteTx) {
+    btnDeleteTx.addEventListener("click", async () => {
+      if (!selectedTxId) return;
+      if (!confirm("Yakin hapus transaksi ini?")) return;
+      try {
+        await apiFetch(`/api/transaction/${selectedTxId}`, { method: "DELETE" });
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+        await Promise.all([loadBalance(), loadLast5(), loadTransactionList().catch(() => {})]);
+        closeTxDetail();
+      } catch (err) {
+        alert(err.message || "Gagal menghapus transaksi.");
+      }
+    });
+  }
+
+  const mainEl = document.querySelector(".main");
+  if (mainEl) {
+    mainEl.addEventListener("click", (e) => {
+      const row = e.target.closest(".tx[data-id]");
+      if (!row) return;
+      const id = parseInt(row.getAttribute("data-id"), 10);
+      if (Number.isNaN(id)) return;
+      const inLast = lastTxList && lastTxList.contains(row);
+      const items = inLast ? lastTxData : txListData;
+      const tx = items.find((t) => t.id === id);
+      if (tx) openTxDetail(tx);
+    });
+  }
 
   if (linkSeeAll) {
     linkSeeAll.addEventListener("click", (e) => {

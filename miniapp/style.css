@@ -515,6 +515,76 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   font-size: 13px;
 }
 
+/* ---------- Detail Transaksi ---------- */
+.view-tx-detail {
+  background: var(--bg);
+}
+.view-tx-detail .main {
+  background: var(--bg);
+}
+.tx-detail-card {
+  background: rgba(15, 22, 38, 0.95);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+}
+.tx-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.tx-detail-row:last-of-type { border-bottom: none; }
+.tx-detail-label {
+  font-size: 13px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.tx-detail-value {
+  font-size: 14px;
+  color: var(--text);
+  text-align: right;
+}
+.tx-detail-amount-row .tx-detail-value { font-size: 18px; font-weight: 700; }
+.tx-detail-amount.income { color: var(--ok); }
+.tx-detail-amount.expense { color: var(--danger); }
+.tx-detail-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tx-detail-actions .btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.btn-edit {
+  border: 1px solid rgba(79, 140, 255, 0.5);
+  background: rgba(79, 140, 255, 0.2);
+  color: var(--text);
+}
+.btn-edit:hover, .btn-edit:focus {
+  background: rgba(79, 140, 255, 0.3);
+}
+.btn-danger {
+  border: 1px solid rgba(255, 92, 115, 0.5);
+  background: rgba(255, 92, 115, 0.2);
+  color: #ff5c73;
+}
+.btn-danger:hover, .btn-danger:focus {
+  background: rgba(255, 92, 115, 0.3);
+}
+
 .form-header {
   display: flex;
   align-items: center;
@@ -615,7 +685,9 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   padding: 10px 12px;
   display: grid;
   gap: 4px;
+  cursor: pointer;
 }
+.tx:hover { background: rgba(255, 255, 255, 0.06); }
 .tx-top {
   display: flex;
   justify-content: space-between;

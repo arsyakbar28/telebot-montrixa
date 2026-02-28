@@ -11,7 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from api.auth import get_current_user
-from api.schemas import TransactionCreateRequest
+from api.schemas import TransactionCreateRequest, TransactionUpdateRequest
+from models.transaction import Transaction
 from services.category_service import CategoryService
 from services.report_service import ReportService
 from services.transaction_service import TransactionService
@@ -135,7 +136,6 @@ def get_transactions(
     transactions = TransactionService.get_user_transactions(
         user.id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
     )
-    from models.transaction import Transaction
     total = Transaction.get_count(user.id, start_date=start_date, end_date=end_date)
     return {
         "transactions": [t.to_dict() for t in transactions],
@@ -169,6 +169,57 @@ def create_transaction(payload: TransactionCreateRequest, user=Depends(get_curre
         raise HTTPException(status_code=400, detail="Failed to create transaction")
 
     return {"transaction": transaction.to_dict()}
+
+
+def _get_owned_transaction(transaction_id: int, user_id: int):
+    """Return transaction if found and owned by user; else raise 404/403."""
+    transaction = Transaction.get_by_id(transaction_id)
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaksi tidak ditemukan")
+    if transaction.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Tidak punya akses ke transaksi ini")
+    return transaction
+
+
+@app.patch("/api/transaction/{transaction_id}")
+def update_transaction(
+    transaction_id: int,
+    payload: TransactionUpdateRequest,
+    user=Depends(get_current_user),
+):
+    transaction = _get_owned_transaction(transaction_id, user.id)
+    updates = payload.model_dump(exclude_unset=True)
+    if not updates:
+        return {"transaction": transaction.to_dict()}
+
+    if "amount" in updates and updates["amount"] is not None:
+        is_valid, amount_val, err = Validator.validate_amount(updates["amount"])
+        if not is_valid or amount_val is None:
+            raise HTTPException(status_code=400, detail=err or "Invalid amount")
+        updates["amount"] = amount_val
+    if "description" in updates and updates["description"] is not None:
+        desc = (updates["description"] or "-").strip() or "-"
+        if desc != "-":
+            is_valid_desc, desc2, err_desc = Validator.validate_description(desc)
+            if not is_valid_desc or desc2 is None:
+                raise HTTPException(status_code=400, detail=err_desc or "Invalid description")
+            desc = desc2
+        updates["description"] = desc
+
+    ok = TransactionService.update_transaction(transaction_id, **updates)
+    if not ok:
+        raise HTTPException(status_code=400, detail="Gagal memperbarui transaksi")
+    updated = Transaction.get_by_id(transaction_id)
+    return {"transaction": updated.to_dict()}
+
+
+@app.delete("/api/transaction/{transaction_id}")
+def delete_transaction(transaction_id: int, user=Depends(get_current_user)):
+    _get_owned_transaction(transaction_id, user.id)
+    ok = TransactionService.delete_transaction(transaction_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail="Gagal menghapus transaksi")
+    return {"deleted": True}
 
 
 # Serve Mini App static files (optional, for same-origin hosting)

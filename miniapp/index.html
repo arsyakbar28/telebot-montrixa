@@ -175,6 +175,42 @@
             </div>
           </form>
         </div>
+
+        <!-- View: Detail Transaksi -->
+        <div id="viewTxDetail" class="view view-full view-tx-detail">
+          <div class="add-tx-header">
+            <button id="btnBackTxDetail" class="btn-back" type="button" aria-label="Kembali">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="add-tx-title">Detail Transaksi</span>
+          </div>
+          <div id="txDetailContent" class="tx-detail-card">
+            <div class="tx-detail-row">
+              <span class="tx-detail-label">Tanggal</span>
+              <span id="detailDate" class="tx-detail-value">-</span>
+            </div>
+            <div class="tx-detail-row">
+              <span class="tx-detail-label">Tipe</span>
+              <span id="detailType" class="tx-detail-value">-</span>
+            </div>
+            <div class="tx-detail-row">
+              <span class="tx-detail-label">Kategori</span>
+              <span id="detailCategory" class="tx-detail-value">-</span>
+            </div>
+            <div class="tx-detail-row tx-detail-amount-row">
+              <span class="tx-detail-label">Nominal</span>
+              <span id="detailAmount" class="tx-detail-value tx-detail-amount">-</span>
+            </div>
+            <div class="tx-detail-row">
+              <span class="tx-detail-label">Keterangan</span>
+              <span id="detailDesc" class="tx-detail-value">-</span>
+            </div>
+          </div>
+          <div class="tx-detail-actions">
+            <button id="btnEditTx" class="btn btn-edit" type="button">Edit</button>
+            <button id="btnDeleteTx" class="btn btn-danger" type="button">Hapus</button>
+          </div>
+        </div>
       </main>
 
       <nav class="bottom-nav" id="bottomNav">
