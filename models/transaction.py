@@ -158,6 +158,24 @@ class Transaction:
         return [Transaction(row) for row in results]
     
     @staticmethod
+    def get_count(user_id: int, start_date: Optional[date] = None,
+                  end_date: Optional[date] = None, trans_type: Optional[str] = None) -> int:
+        """Get total count of transactions for a user with optional filters."""
+        query = "SELECT COUNT(*) as cnt FROM transactions t WHERE t.user_id = %s"
+        params: List[Any] = [user_id]
+        if start_date:
+            query += " AND t.transaction_date >= %s"
+            params.append(start_date)
+        if end_date:
+            query += " AND t.transaction_date <= %s"
+            params.append(end_date)
+        if trans_type:
+            query += " AND t.type = %s"
+            params.append(trans_type)
+        result = DatabaseConnection.execute_query(query, tuple(params), fetch_one=True, commit=False)
+        return int(result['cnt']) if result else 0
+    
+    @staticmethod
     def get_today(user_id: int) -> List['Transaction']:
         """Get today's transactions for a user.
         

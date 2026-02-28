@@ -1,4 +1,4 @@
-/* global Telegram */
+/* global Telegram, Chart */
 
 const $ = (id) => document.getElementById(id);
 
@@ -6,29 +6,58 @@ const statusText = $("statusText");
 const envWarning = $("envWarning");
 const btnClose = $("btnClose");
 
-const typeIncome = $("typeIncome");
-const typeExpense = $("typeExpense");
-const amountInput = $("amountInput");
-const descInput = $("descInput");
-const categorySelect = $("categorySelect");
-const periodSelect = $("periodSelect");
+const viewHome = $("viewHome");
+const viewAnalytic = $("viewAnalytic");
+const viewTransaction = $("viewTransaction");
+const viewAddTx = $("viewAddTx");
+
+const lastTxList = $("lastTxList");
 const txList = $("txList");
+const txListEmpty = $("txListEmpty");
+const txCount = $("txCount");
+const txPagination = $("txPagination");
+const linkSeeAll = $("linkSeeAll");
 
 const incomeVal = $("incomeVal");
 const expenseVal = $("expenseVal");
 const balanceVal = $("balanceVal");
 
+const btnAddIncome = $("btnAddIncome");
+const btnAddExpense = $("btnAddExpense");
+const btnBackAddTx = $("btnBackAddTx");
+const addTxTitle = $("addTxTitle");
+const addTxType = $("addTxType");
+const amountInput = $("amountInput");
+const descInput = $("descInput");
+const categorySelect = $("categorySelect");
 const txForm = $("txForm");
 const btnSave = $("btnSave");
 
-const fmt = new Intl.NumberFormat("id-ID");
+const filterStart = $("filterStart");
+const filterEnd = $("filterEnd");
+const chartCanvas = $("chartCanvas");
+const chartEmpty = $("chartEmpty");
+const categoryBreakdown = $("categoryBreakdown");
+const breakdownEmpty = $("breakdownEmpty");
+const analyticTypeIncome = $("analyticTypeIncome");
+const analyticTypeExpense = $("analyticTypeExpense");
+const bottomNav = $("bottomNav");
 
+const fmt = new Intl.NumberFormat("id-ID");
 const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 const initData = tg && tg.initData ? tg.initData : "";
 
 let currentType = "expense";
+let currentTab = "home";
+let txPage = 0;
+const TX_PAGE_SIZE = 10;
+let txTotal = 0;
+let chartInstance = null;
+
+const PRESET_DAYS = { 7: 7, 30: 30, 0: "month" };
 
 function setStatus(msg, kind = "muted") {
+  if (!statusText) return;
   statusText.textContent = msg || "";
   statusText.style.color =
     kind === "ok"
@@ -51,46 +80,114 @@ async function apiFetch(path, options = {}) {
   } catch (_) {}
   if (!res.ok) {
     const detail = payload && (payload.detail || payload.error) ? (payload.detail || payload.error) : `HTTP ${res.status}`;
-    throw new Error(detail);
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
   return payload;
 }
 
-function renderTxList(items) {
+function formatRp(num) {
+  return "Rp " + fmt.format(Number(num || 0));
+}
+
+function formatDate(str) {
+  if (!str) return "";
+  const s = String(str).slice(0, 10);
+  if (!s) return "";
+  const [y, m, d] = s.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function formatPct(n) {
+  return fmt.format(Number(n || 0)) + "%";
+}
+
+function renderTxItem(t) {
+  const sign = t.type === "income" ? "+" : "−";
+  const amount = sign + formatRp(Math.abs(Number(t.amount || 0)));
+  const cls = t.type === "income" ? "income" : "expense";
+  const cat = `${t.category_icon || ""} ${t.category_name || ""}`.trim();
+  const dateStr = t.transaction_date ? String(t.transaction_date).slice(0, 10) : "";
+  const desc = (t.description || "-").toString();
+  return `
+    <div class="tx">
+      <div class="tx-top">
+        <div class="tx-amount ${cls}">${amount}</div>
+        <div class="tx-meta">${formatDate(dateStr)}</div>
+      </div>
+      <div class="tx-meta">${cat}${cat ? " • " : ""}${desc}</div>
+    </div>
+  `;
+}
+
+function renderTxList(container, items, showEmpty = true, emptyMsg = "Belum ada transaksi.") {
+  if (!container) return;
   if (!items || items.length === 0) {
-    txList.innerHTML = `<div class="hint">Belum ada transaksi di periode ini.</div>`;
+    container.innerHTML = showEmpty ? `<div class="hint">${emptyMsg}</div>` : "";
     return;
   }
-  txList.innerHTML = items
-    .map((t) => {
-      const sign = t.type === "income" ? "+" : "-";
-      const amount = `${sign}${fmt.format(Number(t.amount || 0))}`;
-      const cls = t.type === "income" ? "income" : "expense";
-      const cat = `${t.category_icon || ""} ${t.category_name || ""}`.trim();
-      const date = t.transaction_date ? String(t.transaction_date).slice(0, 10) : "";
-      const desc = (t.description || "-").toString();
-      return `
-        <div class="tx">
-          <div class="tx-top">
-            <div class="tx-amount ${cls}">${amount}</div>
-            <div class="tx-meta">${date}</div>
-          </div>
-          <div class="tx-meta">${cat}${cat ? " • " : ""}${desc}</div>
-        </div>
-      `;
-    })
-    .join("");
+  container.innerHTML = items.map((t) => renderTxItem(t)).join("");
+}
+
+function showView(viewId) {
+  [viewHome, viewAnalytic, viewTransaction, viewAddTx].forEach((v) => {
+    if (v) v.classList.remove("active");
+  });
+  const v = $(viewId);
+  if (v) v.classList.add("active");
+
+  const tabFromView = viewId === "viewHome" ? "home" : viewId === "viewAnalytic" ? "analytic" : viewId === "viewTransaction" ? "transaction" : "";
+  document.querySelectorAll(".nav-item").forEach((el) => {
+    el.classList.toggle("active", el.getAttribute("data-tab") === tabFromView);
+  });
+
+  const isAdd = viewId === "viewAddTx";
+  const appEl = document.querySelector(".app");
+  if (appEl) appEl.classList.toggle("show-add", isAdd);
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  if (tab === "home") {
+    showView("viewHome");
+    loadBalance().catch(() => {});
+    loadLast5().catch(() => {});
+  } else if (tab === "analytic") {
+    showView("viewAnalytic");
+    loadAnalytics().catch(() => {});
+  } else if (tab === "transaction") {
+    showView("viewTransaction");
+    loadTransactionList().catch(() => {});
+  }
+}
+
+function openAddTransaction(type) {
+  currentType = type;
+  addTxType.value = type;
+  addTxTitle.textContent = type === "income" ? "Tambah Pemasukan" : "Tambah Pengeluaran";
+  amountInput.value = "";
+  descInput.value = "";
+  setStatus("");
+  loadCategories().catch(() => {});
+  showView("viewAddTx");
+}
+
+function closeAddTransaction() {
+  switchTab("home");
 }
 
 async function loadBalance() {
+  if (incomeVal) incomeVal.textContent = "…";
+  if (expenseVal) expenseVal.textContent = "…";
+  if (balanceVal) balanceVal.textContent = "…";
   const b = await apiFetch("/api/balance");
-  incomeVal.textContent = fmt.format(Number(b.income || 0));
-  expenseVal.textContent = fmt.format(Number(b.expense || 0));
-  balanceVal.textContent = fmt.format(Number(b.balance || 0));
+  if (incomeVal) incomeVal.textContent = formatRp(b.income);
+  if (expenseVal) expenseVal.textContent = formatRp(b.expense);
+  if (balanceVal) balanceVal.textContent = formatRp(b.balance);
 }
 
 async function loadCategories() {
-  categorySelect.innerHTML = `<option>Memuat...</option>`;
+  if (!categorySelect) return;
+  categorySelect.innerHTML = `<option value="">Memuat...</option>`;
   const data = await apiFetch(`/api/categories?type=${encodeURIComponent(currentType)}`);
   const cats = data.categories || [];
   if (cats.length === 0) {
@@ -102,22 +199,162 @@ async function loadCategories() {
     .join("");
 }
 
-async function loadTransactions() {
-  const p = periodSelect.value || "30d";
-  const data = await apiFetch(`/api/transactions?period=${encodeURIComponent(p)}`);
-  renderTxList(data.transactions || []);
+async function loadLast5() {
+  if (lastTxList) lastTxList.innerHTML = `<div class="hint">Memuat…</div>`;
+  const end = new Date();
+  const start = new Date();
+  start.setFullYear(start.getFullYear() - 1);
+  const startStr = start.toISOString().slice(0, 10);
+  const endStr = end.toISOString().slice(0, 10);
+  const data = await apiFetch(`/api/transactions?start=${startStr}&end=${endStr}&limit=5&offset=0`);
+  renderTxList(lastTxList, data.transactions || [], true, "Belum ada transaksi.");
 }
 
-function setType(type) {
+function getDateRange() {
+  let start = filterStart && filterStart.value ? filterStart.value : null;
+  let end = filterEnd && filterEnd.value ? filterEnd.value : null;
+  if (!start || !end) {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    start = startDate.toISOString().slice(0, 10);
+    end = endDate.toISOString().slice(0, 10);
+    if (filterStart) filterStart.value = start;
+    if (filterEnd) filterEnd.value = end;
+  }
+  return { start, end };
+}
+
+async function loadTransactionList() {
+  const { start, end } = getDateRange();
+  if (txList) txList.innerHTML = `<div class="hint">Memuat…</div>`;
+  if (txListEmpty) txListEmpty.hidden = true;
+  const offset = txPage * TX_PAGE_SIZE;
+  const data = await apiFetch(
+    `/api/transactions?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${TX_PAGE_SIZE}&offset=${offset}`
+  );
+  const list = data.transactions || [];
+  txTotal = data.total ?? 0;
+
+  if (txList) renderTxList(txList, list, false);
+  if (txListEmpty) {
+    txListEmpty.hidden = list.length > 0;
+  }
+  if (txCount) {
+    txCount.textContent = `Total: ${txTotal}`;
+  }
+
+  const totalPages = Math.max(1, Math.ceil(txTotal / TX_PAGE_SIZE));
+  if (txPagination) {
+    txPagination.innerHTML = `
+      <button type="button" id="txPrev" ${txPage <= 0 ? "disabled" : ""}>Prev</button>
+      <span class="page-info">${txPage + 1} / ${totalPages}</span>
+      <button type="button" id="txNext" ${txPage >= totalPages - 1 ? "disabled" : ""}>Next</button>
+    `;
+    const prevBtn = $("txPrev");
+    const nextBtn = $("txNext");
+    if (prevBtn) prevBtn.addEventListener("click", () => { txPage = Math.max(0, txPage - 1); loadTransactionList().catch(() => {}); });
+    if (nextBtn) nextBtn.addEventListener("click", () => { txPage = Math.min(totalPages - 1, txPage + 1); loadTransactionList().catch(() => {}); });
+  }
+}
+
+function setAnalyticType(type) {
   currentType = type;
   if (type === "income") {
-    typeIncome.classList.add("active");
-    typeExpense.classList.remove("active");
+    analyticTypeIncome.classList.add("active");
+    analyticTypeExpense.classList.remove("active");
   } else {
-    typeExpense.classList.add("active");
-    typeIncome.classList.remove("active");
+    analyticTypeExpense.classList.add("active");
+    analyticTypeIncome.classList.remove("active");
   }
-  loadCategories().catch((e) => setStatus(e.message, "err"));
+  loadAnalytics().catch(() => {});
+}
+
+async function loadAnalytics() {
+  const { start, end } = getDateRange();
+  if (chartEmpty) chartEmpty.hidden = true;
+  if (categoryBreakdown) categoryBreakdown.innerHTML = `<div class="hint">Memuat…</div>`;
+  if (breakdownEmpty) breakdownEmpty.hidden = true;
+  const data = await apiFetch(
+    `/api/analytics?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&type=${encodeURIComponent(currentType)}`
+  );
+
+  const byDay = data.by_day || [];
+  if (chartInstance) {
+    chartInstance.destroy();
+    chartInstance = null;
+  }
+
+  if (chartCanvas) {
+    const ctx = chartCanvas.getContext("2d");
+    const labels = byDay.map((d) => formatDate(d.date));
+    const values = byDay.map((d) => (currentType === "income" ? d.income : d.expense));
+
+    if (chartEmpty) chartEmpty.hidden = values.length > 0;
+
+    if (values.length > 0) {
+      chartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: currentType === "income" ? "Pemasukan" : "Pengeluaran",
+              data: values,
+              backgroundColor: currentType === "income" ? "rgba(32, 211, 162, 0.6)" : "rgba(255, 92, 115, 0.6)",
+              borderColor: currentType === "income" ? "rgba(32, 211, 162, 0.9)" : "rgba(255, 92, 115, 0.9)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: "rgba(255,255,255,0.08)" },
+              ticks: { color: "rgba(255,255,255,0.7)" },
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: "rgba(255,255,255,0.7)", maxRotation: 45 },
+            },
+          },
+        },
+      });
+    }
+  }
+
+  const byCategory = data.by_category || [];
+  if (categoryBreakdown) {
+    if (byCategory.length === 0) {
+      categoryBreakdown.innerHTML = "";
+      if (breakdownEmpty) {
+        breakdownEmpty.hidden = false;
+        breakdownEmpty.textContent = "Belum ada data untuk periode ini.";
+      }
+    } else {
+      if (breakdownEmpty) breakdownEmpty.hidden = true;
+      const maxPct = Math.max(...byCategory.map((c) => c.percentage), 1);
+      categoryBreakdown.innerHTML = byCategory
+        .map(
+          (c) => `
+        <div class="breakdown-item">
+          <span class="breakdown-name">${(c.category_icon || "") + " " + (c.category_name || "")}</span>
+          <div class="breakdown-bar-wrap">
+            <div class="breakdown-bar" style="width:${c.percentage}%; background:${currentType === "income" ? "rgba(32, 211, 162, 0.7)" : "rgba(255, 92, 115, 0.7)"}"></div>
+          </div>
+          <span class="breakdown-pct">${formatPct(c.percentage)}</span>
+        </div>
+      `
+        )
+        .join("");
+    }
+  }
 }
 
 async function onSubmit(e) {
@@ -152,40 +389,88 @@ async function onSubmit(e) {
     setStatus("Tersimpan.", "ok");
     amountInput.value = "";
     descInput.value = "";
-    await Promise.all([loadBalance(), loadTransactions()]);
-    if (tg) tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("success");
+    await Promise.all([loadBalance(), loadLast5()]);
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+    closeAddTransaction();
   } catch (err) {
     setStatus(err.message || "Gagal menyimpan.", "err");
-    if (tg) tg.HapticFeedback && tg.HapticFeedback.notificationOccurred("error");
+    if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("error");
   } finally {
     btnSave.disabled = false;
   }
+}
+
+function setDefaultDateRange() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 30);
+  if (filterStart) filterStart.value = start.toISOString().slice(0, 10);
+  if (filterEnd) filterEnd.value = end.toISOString().slice(0, 10);
 }
 
 function init() {
   if (tg) {
     tg.ready();
     tg.expand();
-    btnClose.addEventListener("click", () => tg.close());
+    if (btnClose) btnClose.addEventListener("click", () => tg.close());
   } else {
-    btnClose.hidden = true;
+    if (btnClose) btnClose.hidden = true;
   }
 
   if (!initData) {
-    envWarning.hidden = false;
+    if (envWarning) envWarning.hidden = false;
     setStatus("init_data tidak ada (buka dari Telegram).", "err");
     return;
   }
 
-  typeIncome.addEventListener("click", () => setType("income"));
-  typeExpense.addEventListener("click", () => setType("expense"));
-  periodSelect.addEventListener("change", () => loadTransactions().catch((e) => setStatus(e.message, "err")));
-  txForm.addEventListener("submit", onSubmit);
+  document.querySelectorAll(".nav-item").forEach((el) => {
+    el.addEventListener("click", () => switchTab(el.getAttribute("data-tab")));
+  });
 
-  Promise.all([loadBalance(), loadCategories(), loadTransactions()])
+  if (btnAddIncome) btnAddIncome.addEventListener("click", () => openAddTransaction("income"));
+  if (btnAddExpense) btnAddExpense.addEventListener("click", () => openAddTransaction("expense"));
+  if (btnBackAddTx) btnBackAddTx.addEventListener("click", closeAddTransaction);
+
+  if (linkSeeAll) {
+    linkSeeAll.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchTab("transaction");
+    });
+  }
+
+  if (analyticTypeIncome) analyticTypeIncome.addEventListener("click", () => setAnalyticType("income"));
+  if (analyticTypeExpense) analyticTypeExpense.addEventListener("click", () => setAnalyticType("expense"));
+
+  document.querySelectorAll(".preset-buttons button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const days = parseInt(btn.getAttribute("data-days"), 10);
+      const end = new Date();
+      const start = new Date();
+      if (days === 0) {
+        start.setDate(1);
+        if (filterEnd) filterEnd.value = end.toISOString().slice(0, 10);
+        if (filterStart) filterStart.value = start.toISOString().slice(0, 10);
+      } else {
+        start.setDate(start.getDate() - days);
+        if (filterStart) filterStart.value = start.toISOString().slice(0, 10);
+        if (filterEnd) filterEnd.value = end.toISOString().slice(0, 10);
+      }
+      txPage = 0;
+      loadTransactionList().catch(() => {});
+    });
+  });
+
+  if (filterStart && filterEnd) {
+    filterStart.addEventListener("change", () => { txPage = 0; loadTransactionList().catch(() => {}); });
+    filterEnd.addEventListener("change", () => { txPage = 0; loadTransactionList().catch(() => {}); });
+  }
+
+  if (txForm) txForm.addEventListener("submit", onSubmit);
+
+  setDefaultDateRange();
+  Promise.all([loadBalance(), loadLast5()])
     .then(() => setStatus(""))
     .catch((e) => setStatus(e.message, "err"));
 }
 
 init();
-

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -12,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from api.auth import get_current_user
 from api.schemas import TransactionCreateRequest
 from services.category_service import CategoryService
+from services.report_service import ReportService
 from services.transaction_service import TransactionService
 from utils.validators import Validator
 
@@ -55,15 +57,91 @@ def get_balance(user=Depends(get_current_user)):
     return TransactionService.get_balance(user.id)
 
 
-@app.get("/api/transactions")
-def get_transactions(
-    period: str = Query(default="30d", pattern="^(today|7d|30d|this_month|last_month)$"),
+@app.get("/api/analytics")
+def get_analytics(
+    start: Optional[str] = Query(default=None, description="Start date YYYY-MM-DD"),
+    end: Optional[str] = Query(default=None, description="End date YYYY-MM-DD"),
+    type: str = Query(default="expense", pattern="^(income|expense)$"),
     user=Depends(get_current_user),
 ):
-    transactions = TransactionService.get_transactions_by_period(user.id, period)
+    start_date = _parse_date(start)
+    end_date = _parse_date(end)
+    if start_date is None or end_date is None:
+        start_date, end_date = _default_date_range()
+    summary = ReportService.get_summary(user.id, start_date, end_date)
+    by_category = (
+        ReportService.get_income_by_category(user.id, start_date, end_date)
+        if type == "income"
+        else ReportService.get_expense_by_category(user.id, start_date, end_date)
+    )
+    by_day = ReportService.get_daily_trend(user.id, start_date, end_date)
     return {
-        "period": period,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "type": type,
+        "summary": {
+            "total_income": summary["total_income"],
+            "total_expense": summary["total_expense"],
+            "balance": summary["balance"],
+            "transaction_count": summary["transaction_count"],
+        },
+        "by_category": [
+            {
+                "category_name": r["category_name"],
+                "category_icon": r["category_icon"],
+                "total_amount": r["total_amount"],
+                "percentage": round(r["percentage"], 2),
+            }
+            for r in by_category
+        ],
+        "by_day": [
+            {
+                "date": (d["date"].isoformat() if hasattr(d["date"], "isoformat") else str(d["date"])),
+                "income": d["income"],
+                "expense": d["expense"],
+            }
+            for d in by_day
+        ],
+    }
+
+
+def _parse_date(d: Optional[str]) -> Optional[date]:
+    if not d:
+        return None
+    try:
+        return date.fromisoformat(d)
+    except ValueError:
+        return None
+
+
+def _default_date_range():
+    end = date.today()
+    start = end - timedelta(days=30)
+    return start, end
+
+
+@app.get("/api/transactions")
+def get_transactions(
+    start: Optional[str] = Query(default=None, description="Start date YYYY-MM-DD"),
+    end: Optional[str] = Query(default=None, description="End date YYYY-MM-DD"),
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    user=Depends(get_current_user),
+):
+    start_date = _parse_date(start)
+    end_date = _parse_date(end)
+    if start_date is None or end_date is None:
+        start_date, end_date = _default_date_range()
+    transactions = TransactionService.get_user_transactions(
+        user.id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
+    )
+    from models.transaction import Transaction
+    total = Transaction.get_count(user.id, start_date=start_date, end_date=end_date)
+    return {
         "transactions": [t.to_dict() for t in transactions],
+        "total": total,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
     }
 
 

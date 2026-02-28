@@ -6,44 +6,122 @@
     <title>Montrixa</title>
     <link rel="stylesheet" href="./style.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <div class="app">
       <header class="header">
-        <div>
-          <div class="brand">Montrixa</div>
-          <div class="subtitle">Catat transaksi, saldo, dan riwayat</div>
+        <div class="brand-wrap">
+          <span class="brand">Montrixa</span>
         </div>
         <button id="btnClose" class="btn btn-secondary" type="button">Tutup</button>
       </header>
 
-      <section class="card">
-        <div class="card-title">Saldo</div>
-        <div id="balanceRow" class="balance">
-          <div class="metric">
-            <div class="metric-label">Pemasukan</div>
-            <div id="incomeVal" class="metric-value">-</div>
-          </div>
-          <div class="metric">
-            <div class="metric-label">Pengeluaran</div>
-            <div id="expenseVal" class="metric-value">-</div>
-          </div>
-          <div class="metric metric-total">
-            <div class="metric-label">Saldo</div>
-            <div id="balanceVal" class="metric-value">-</div>
-          </div>
+      <main class="main">
+        <!-- View: Home -->
+        <div id="viewHome" class="view active">
+          <section class="card">
+            <div class="card-title">Saldo</div>
+            <div id="balanceRow" class="balance">
+              <div class="metric">
+                <div class="metric-label">Pemasukan</div>
+                <div id="incomeVal" class="metric-value">-</div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Pengeluaran</div>
+                <div id="expenseVal" class="metric-value">-</div>
+              </div>
+              <div class="metric metric-total">
+                <div class="metric-label">Saldo</div>
+                <div id="balanceVal" class="metric-value">-</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card card-actions">
+            <div class="card-title">Catat Transaksi</div>
+            <div class="action-buttons">
+              <button id="btnAddIncome" class="action-btn income" type="button" data-type="income">
+                <span class="action-icon">📥</span>
+                <span>Pemasukan</span>
+              </button>
+              <button id="btnAddExpense" class="action-btn expense" type="button" data-type="expense">
+                <span class="action-icon">📤</span>
+                <span>Pengeluaran</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-title row">
+              <span>5 Transaksi Terakhir</span>
+              <a id="linkSeeAll" href="#" class="link">Lihat semua</a>
+            </div>
+            <div id="lastTxList" class="list"></div>
+          </section>
         </div>
-      </section>
 
-      <section class="card">
-        <div class="card-title">Catat Transaksi</div>
-        <form id="txForm" class="form">
-          <div class="segmented">
-            <button id="typeIncome" class="segmented-btn" type="button" data-type="income">Pemasukan</button>
-            <button id="typeExpense" class="segmented-btn active" type="button" data-type="expense">Pengeluaran</button>
+        <!-- View: Analytic -->
+        <div id="viewAnalytic" class="view">
+          <section class="card">
+            <div class="card-title">Grafik</div>
+            <div class="analytic-toggle">
+              <button id="analyticTypeIncome" class="segmented-btn" type="button" data-type="income">Pemasukan</button>
+              <button id="analyticTypeExpense" class="segmented-btn active" type="button" data-type="expense">Pengeluaran</button>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="chartCanvas"></canvas>
+            </div>
+            <div id="chartEmpty" class="empty-state" hidden>Belum ada data untuk periode ini.</div>
+          </section>
+
+          <section class="card">
+            <div class="card-title">Per Kategori (%)</div>
+            <div id="categoryBreakdown" class="breakdown"></div>
+            <div id="breakdownEmpty" class="empty-state" hidden>Belum ada data.</div>
+          </section>
+        </div>
+
+        <!-- View: Transaction -->
+        <div id="viewTransaction" class="view">
+          <section class="card">
+            <div class="card-title">Filter Tanggal</div>
+            <div class="date-filters">
+              <label class="field">
+                <span class="label">Dari</span>
+                <input type="date" id="filterStart" />
+              </label>
+              <label class="field">
+                <span class="label">Sampai</span>
+                <input type="date" id="filterEnd" />
+              </label>
+            </div>
+            <div class="preset-buttons">
+              <button type="button" data-days="7">7 hari</button>
+              <button type="button" data-days="30">30 hari</button>
+              <button type="button" data-days="0">Bulan ini</button>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-title row">
+              <span>Riwayat</span>
+              <span id="txCount" class="muted"></span>
+            </div>
+            <div id="txList" class="list"></div>
+            <div id="txListEmpty" class="empty-state" hidden>Tidak ada transaksi.</div>
+            <div id="txPagination" class="pagination"></div>
+          </section>
+        </div>
+
+        <!-- View: Tambah Transaksi (full screen form) -->
+        <div id="viewAddTx" class="view view-full">
+          <div class="form-header">
+            <button id="btnBackAddTx" class="btn btn-secondary" type="button">← Kembali</button>
+            <h2 id="addTxTitle">Tambah Transaksi</h2>
           </div>
-
-          <div class="grid">
+          <form id="txForm" class="form form-add">
+            <input type="hidden" id="addTxType" value="expense" />
             <label class="field">
               <span class="label">Nominal</span>
               <input id="amountInput" inputmode="numeric" autocomplete="off" placeholder="contoh: 10000" />
@@ -52,33 +130,32 @@
               <span class="label">Kategori</span>
               <select id="categorySelect"></select>
             </label>
-          </div>
-
-          <label class="field">
-            <span class="label">Keterangan</span>
-            <input id="descInput" autocomplete="off" placeholder="contoh: makan siang" />
-          </label>
-
-          <div class="actions">
-            <button id="btnSave" class="btn btn-primary" type="submit">Simpan</button>
-            <span id="statusText" class="status"></span>
-          </div>
-        </form>
-      </section>
-
-      <section class="card">
-        <div class="card-title row">
-          <span>Riwayat</span>
-          <select id="periodSelect" class="select-compact">
-            <option value="today">Hari ini</option>
-            <option value="7d">7 hari</option>
-            <option value="30d" selected>30 hari</option>
-            <option value="this_month">Bulan ini</option>
-            <option value="last_month">Bulan lalu</option>
-          </select>
+            <label class="field">
+              <span class="label">Keterangan (opsional)</span>
+              <input id="descInput" autocomplete="off" placeholder="contoh: makan siang" />
+            </label>
+            <div class="actions">
+              <button id="btnSave" class="btn btn-primary" type="submit">Simpan</button>
+              <span id="statusText" class="status"></span>
+            </div>
+          </form>
         </div>
-        <div id="txList" class="list"></div>
-      </section>
+      </main>
+
+      <nav class="bottom-nav" id="bottomNav">
+        <button type="button" class="nav-item active" data-tab="home">
+          <span class="nav-icon">🏠</span>
+          <span>Home</span>
+        </button>
+        <button type="button" class="nav-item" data-tab="analytic">
+          <span class="nav-icon">📊</span>
+          <span>Analytic</span>
+        </button>
+        <button type="button" class="nav-item" data-tab="transaction">
+          <span class="nav-icon">📋</span>
+          <span>Transaction</span>
+        </button>
+      </nav>
 
       <section class="card card-warning" id="envWarning" hidden>
         <div class="card-title">Tidak bisa memuat data</div>
@@ -91,4 +168,3 @@
     <script src="./app.js"></script>
   </body>
 </html>
-
