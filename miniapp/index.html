@@ -119,27 +119,58 @@
         </div>
 
         <!-- View: Tambah Transaksi (full screen form) -->
-        <div id="viewAddTx" class="view view-full">
-          <div class="form-header">
-            <button id="btnBackAddTx" class="btn btn-secondary" type="button">← Kembali</button>
-            <h2 id="addTxTitle">Tambah Transaksi</h2>
+        <div id="viewAddTx" class="view view-full view-add-tx">
+          <div class="add-tx-header">
+            <button id="btnBackAddTx" class="btn-back" type="button" aria-label="Kembali">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            </button>
+            <span id="addTxTitle" class="add-tx-title">Tambah Transaksi</span>
           </div>
-          <form id="txForm" class="form form-add">
+          <div id="addTxBanner" class="add-tx-banner expense">
+            <span class="add-tx-banner-icon icon-expense">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="22"/><path d="M24 34V14M16 26l8 8 8-8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="add-tx-banner-icon icon-income">
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"><circle cx="24" cy="24" r="22"/><path d="M24 14v20M16 22l8-8 8 8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span id="addTxBannerLabel" class="add-tx-banner-label">Pengeluaran</span>
+          </div>
+          <form id="txForm" class="form form-add" data-type="expense">
             <input type="hidden" id="addTxType" value="expense" />
-            <label class="field">
-              <span class="label">Nominal</span>
-              <input id="amountInput" inputmode="numeric" autocomplete="off" placeholder="contoh: 10000" />
-            </label>
-            <label class="field">
-              <span class="label">Kategori</span>
-              <select id="categorySelect"></select>
-            </label>
-            <label class="field">
-              <span class="label">Keterangan (opsional)</span>
-              <input id="descInput" autocomplete="off" placeholder="contoh: makan siang" />
-            </label>
-            <div class="actions">
-              <button id="btnSave" class="btn btn-primary" type="submit">Simpan</button>
+            <div class="form-add-card">
+              <label class="field field-amount">
+                <span class="label">Nominal</span>
+                <div class="amount-wrap">
+                  <span class="amount-prefix">Rp</span>
+                  <input id="amountInput" type="text" inputmode="numeric" autocomplete="off" placeholder="0" />
+                </div>
+              </label>
+              <label class="field field-category">
+                <span class="label">Kategori</span>
+                <div class="input-with-icon">
+                  <span class="input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                  </span>
+                  <select id="categorySelect"></select>
+                </div>
+              </label>
+              <label class="field field-desc">
+                <span class="label">Keterangan (opsional)</span>
+                <div class="input-with-icon">
+                  <span class="input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  </span>
+                  <input id="descInput" autocomplete="off" placeholder="contoh: makan siang" />
+                </div>
+              </label>
+            </div>
+            <div class="form-add-actions">
+              <button id="btnSave" class="btn btn-save" type="submit">
+                <span class="btn-save-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                </span>
+                Simpan
+              </button>
               <span id="statusText" class="status"></span>
             </div>
           </form>

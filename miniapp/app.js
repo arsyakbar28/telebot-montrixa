@@ -26,6 +26,8 @@ const btnAddIncome = $("btnAddIncome");
 const btnAddExpense = $("btnAddExpense");
 const btnBackAddTx = $("btnBackAddTx");
 const addTxTitle = $("addTxTitle");
+const addTxBanner = $("addTxBanner");
+const addTxBannerLabel = $("addTxBannerLabel");
 const addTxType = $("addTxType");
 const amountInput = $("amountInput");
 const descInput = $("descInput");
@@ -163,7 +165,13 @@ function switchTab(tab) {
 function openAddTransaction(type) {
   currentType = type;
   addTxType.value = type;
-  addTxTitle.textContent = type === "income" ? "Tambah Pemasukan" : "Tambah Pengeluaran";
+  if (txForm) txForm.dataset.type = type;
+  if (addTxTitle) addTxTitle.textContent = type === "income" ? "Tambah Pemasukan" : "Tambah Pengeluaran";
+  if (addTxBanner) {
+    addTxBanner.classList.remove("income", "expense");
+    addTxBanner.classList.add(type);
+  }
+  if (addTxBannerLabel) addTxBannerLabel.textContent = type === "income" ? "Pemasukan" : "Pengeluaran";
   amountInput.value = "";
   descInput.value = "";
   setStatus("");
@@ -195,7 +203,7 @@ async function loadCategories() {
     return;
   }
   categorySelect.innerHTML = cats
-    .map((c) => `<option value="${c.id}">${(c.icon ? c.icon + " " : "") + c.name}</option>`)
+    .map((c) => `<option value="${c.id}">${c.name}</option>`)
     .join("");
 }
 

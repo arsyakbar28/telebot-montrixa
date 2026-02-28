@@ -10,7 +10,7 @@
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   --radius: 16px;
   --radius-sm: 12px;
-  --nav-height: 56px;
+  --nav-height: 64px;
   --header-height: 52px;
 }
 
@@ -30,7 +30,7 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding-bottom: var(--nav-height);
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
 .header {
@@ -53,7 +53,14 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 14px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   -webkit-overflow-scrolling: touch;
+}
+
+/* Ruang bawah tambahan di Analytic & Transaction agar tidak tertutup nav */
+#viewAnalytic,
+#viewTransaction {
+  padding-bottom: 24px;
 }
 
 .view {
@@ -204,6 +211,7 @@ body {
 .field { display: grid; gap: 6px; }
 .label { font-size: 12px; color: var(--muted); }
 
+/* 16px agar iOS tidak zoom saat fokus (nominal, kategori, keterangan) */
 input, select {
   width: 100%;
   padding: 11px 12px;
@@ -212,11 +220,52 @@ input, select {
   background: rgba(0, 0, 0, 0.22);
   color: var(--text);
   outline: none;
+  font-size: 16px;
 }
 input[type="date"] {
   min-height: 44px;
 }
 input::placeholder { color: rgba(255,255,255,0.45); }
+
+/* Kategori: ikon SVG di kiri select */
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.22);
+  padding-left: 12px;
+}
+.input-with-icon .input-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+.input-with-icon .input-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.input-with-icon select {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding-left: 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-right: 12px;
+  min-height: 48px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
 
 .segmented, .analytic-toggle {
   display: inline-flex;
@@ -269,6 +318,196 @@ input::placeholder { color: rgba(255,255,255,0.45); }
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* ---------- Tambah Transaksi: layout & banner ---------- */
+.view-add-tx {
+  padding-top: 0;
+}
+.view-add-tx .main {
+  padding-top: 0;
+}
+
+.add-tx-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0 16px;
+}
+.btn-back {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-back:hover, .btn-back:focus {
+  background: rgba(255, 255, 255, 0.12);
+}
+.btn-back svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.add-tx-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.add-tx-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  background: rgba(255, 92, 115, 0.15);
+  border: 1px solid rgba(255, 92, 115, 0.35);
+}
+.add-tx-banner.income {
+  background: rgba(32, 211, 162, 0.15);
+  border-color: rgba(32, 211, 162, 0.35);
+}
+.add-tx-banner-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+}
+.add-tx-banner-icon svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+.add-tx-banner.expense .add-tx-banner-icon { color: #ff5c73; }
+.add-tx-banner.income .add-tx-banner-icon { color: #20d3a2; }
+.add-tx-banner .icon-income { display: none; }
+.add-tx-banner .icon-expense { display: flex; }
+.add-tx-banner.income .icon-income { display: flex; }
+.add-tx-banner.income .icon-expense { display: none; }
+.add-tx-banner-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.form-add-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 18px;
+}
+.form-add .field {
+  margin: 0;
+}
+.form-add .label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.field-amount .amount-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+.amount-prefix {
+  padding: 14px 14px 14px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.15);
+  border-right: 1px solid var(--line);
+}
+.field-amount input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  padding: 14px 16px;
+  text-align: left;
+}
+.field-desc .input-with-icon {
+  padding-right: 12px;
+}
+.field-desc .input-with-icon input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding-left: 0;
+}
+.form-add-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+.btn-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+}
+.btn-save:active {
+  transform: scale(0.98);
+}
+.form-add[data-type="income"] .btn-save {
+  background: linear-gradient(135deg, #20d3a2 0%, #1ab88a 100%);
+  color: #0b1220;
+  box-shadow: 0 4px 16px rgba(32, 211, 162, 0.35);
+}
+.form-add[data-type="expense"] .btn-save {
+  background: linear-gradient(135deg, #ff5c73 0%, #e84a5f 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(255, 92, 115, 0.35);
+}
+.btn-save:disabled {
+  opacity: 0.6;
+  transform: none;
+}
+.btn-save-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-save-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.form-add[data-type="income"] .btn-save-icon { color: #0b1220; }
+.form-add[data-type="expense"] .btn-save-icon { color: #fff; }
+.form-add-actions .status {
+  text-align: center;
+  font-size: 13px;
 }
 
 .form-header {
@@ -413,16 +652,20 @@ code { color: rgba(255,255,255,0.85); }
   color: var(--muted);
 }
 
-/* Bottom nav */
+/* Bottom nav – penuh sampai bawah layar inkl. safe area */
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   width: 100%;
   max-width: 740px;
-  height: var(--nav-height);
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  margin: 0 auto;
+  min-height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  padding-top: 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
   background: rgba(15, 22, 38, 0.98);
   border-top: 1px solid var(--line);
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
@@ -431,6 +674,7 @@ code { color: rgba(255,255,255,0.85); }
   justify-content: space-around;
   z-index: 100;
   backdrop-filter: blur(12px);
+  box-sizing: border-box;
 }
 
 .nav-item {
@@ -438,10 +682,11 @@ code { color: rgba(255,255,255,0.85); }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   flex: 1;
   min-width: 0;
-  padding: 10px 12px 12px;
+  max-width: 120px;
+  padding: 6px 8px 8px;
   border: none;
   background: transparent;
   color: var(--muted);
@@ -450,7 +695,7 @@ code { color: rgba(255,255,255,0.85); }
   cursor: pointer;
   transition: color 0.2s ease, background 0.2s ease;
   border-radius: 12px;
-  margin: 0 4px;
+  margin: 0 2px;
 }
 .nav-item:hover, .nav-item:focus {
   color: var(--text);
