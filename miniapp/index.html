@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Montrixa</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div>
+          <div class="brand">Montrixa</div>
+          <div class="subtitle">Catat transaksi, saldo, dan riwayat</div>
+        </div>
+        <button id="btnClose" class="btn btn-secondary" type="button">Tutup</button>
+      </header>
+
+      <section class="card">
+        <div class="card-title">Saldo</div>
+        <div id="balanceRow" class="balance">
+          <div class="metric">
+            <div class="metric-label">Pemasukan</div>
+            <div id="incomeVal" class="metric-value">-</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Pengeluaran</div>
+            <div id="expenseVal" class="metric-value">-</div>
+          </div>
+          <div class="metric metric-total">
+            <div class="metric-label">Saldo</div>
+            <div id="balanceVal" class="metric-value">-</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Catat Transaksi</div>
+        <form id="txForm" class="form">
+          <div class="segmented">
+            <button id="typeIncome" class="segmented-btn" type="button" data-type="income">Pemasukan</button>
+            <button id="typeExpense" class="segmented-btn active" type="button" data-type="expense">Pengeluaran</button>
+          </div>
+
+          <div class="grid">
+            <label class="field">
+              <span class="label">Nominal</span>
+              <input id="amountInput" inputmode="numeric" autocomplete="off" placeholder="contoh: 10000" />
+            </label>
+            <label class="field">
+              <span class="label">Kategori</span>
+              <select id="categorySelect"></select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="label">Keterangan</span>
+            <input id="descInput" autocomplete="off" placeholder="contoh: makan siang" />
+          </label>
+
+          <div class="actions">
+            <button id="btnSave" class="btn btn-primary" type="submit">Simpan</button>
+            <span id="statusText" class="status"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="card-title row">
+          <span>Riwayat</span>
+          <select id="periodSelect" class="select-compact">
+            <option value="today">Hari ini</option>
+            <option value="7d">7 hari</option>
+            <option value="30d" selected>30 hari</option>
+            <option value="this_month">Bulan ini</option>
+            <option value="last_month">Bulan lalu</option>
+          </select>
+        </div>
+        <div id="txList" class="list"></div>
+      </section>
+
+      <section class="card card-warning" id="envWarning" hidden>
+        <div class="card-title">Tidak bisa memuat data</div>
+        <div class="hint">
+          Mini App harus dibuka dari dalam Telegram agar <code>init_data</code> tersedia.
+        </div>
+      </section>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
