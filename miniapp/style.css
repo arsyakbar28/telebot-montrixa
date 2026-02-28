@@ -25,6 +25,7 @@ body {
 }
 
 .app {
+  width: 100%;
   max-width: 740px;
   margin: 0 auto;
   min-height: 100%;
@@ -323,9 +324,12 @@ input::placeholder { color: rgba(255,255,255,0.45); }
 /* ---------- Tambah Transaksi: layout & banner ---------- */
 .view-add-tx {
   padding-top: 0;
+  /* Background solid agar tidak tembus gradient body (hindari pita warna kontras) */
+  background: var(--bg);
 }
 .view-add-tx .main {
   padding-top: 0;
+  background: var(--bg);
 }
 
 .add-tx-header {
@@ -402,7 +406,8 @@ input::placeholder { color: rgba(255,255,255,0.45); }
 }
 
 .form-add-card {
-  background: var(--card);
+  /* Opaque supaya tidak ada gradient body yang tembus dan bikin pita biru */
+  background: rgba(15, 22, 38, 0.95);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
@@ -735,8 +740,44 @@ code { color: rgba(255,255,255,0.85); }
   pointer-events: none;
 }
 
+/* ----- Responsive: HP kecil (< 400px) ----- */
+@media (max-width: 399px) {
+  .main { padding: 10px; }
+  .card { padding: 12px; margin: 10px 0; }
+  .card-balance .balance-value { font-size: 22px; }
+  .add-tx-header { padding: 10px 0 12px; }
+  .form-add-card { padding: 14px; }
+  .btn-save { padding: 14px 16px; font-size: 15px; }
+  .bottom-nav { padding-left: 6px; padding-right: 6px; }
+  .nav-item { padding: 6px 4px 6px; font-size: 10px; }
+}
+
+/* ----- Responsive: HP (< 560px) ----- */
 @media (max-width: 560px) {
   .card-balance .balance-value { font-size: 24px; }
   .grid { grid-template-columns: 1fr; }
   .date-filters { grid-template-columns: 1fr; }
+}
+
+/* ----- Responsive: Tablet (768px+) ----- */
+@media (min-width: 768px) {
+  .main { padding: 20px; }
+  .card { padding: 18px; margin: 16px 0; }
+  .header { padding: 12px 20px; }
+  .form-add-card { padding: 22px; }
+  .add-tx-banner { padding: 16px 20px; }
+  .bottom-nav { padding-top: 14px; padding-bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
+  .nav-item .nav-icon svg { width: 24px; height: 24px; }
+  .nav-item { font-size: 12px; }
+}
+
+/* ----- Responsive: Laptop / Desktop (1024px+) ----- */
+@media (min-width: 1024px) {
+  .app {
+    box-shadow: 0 0 0 1px var(--line);
+    min-height: 90vh;
+    max-height: 900px;
+  }
+  .main { padding: 24px; }
+  .card { padding: 20px; margin: 18px 0; }
 }
