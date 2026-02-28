@@ -4,6 +4,7 @@ from typing import Optional, List, Dict, Any
 from datetime import date, datetime, timedelta
 from models.transaction import Transaction
 from models.category import Category
+from utils.datetime_utils import today_jakarta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -102,7 +103,7 @@ class TransactionService:
         Returns:
             List of Transaction instances
         """
-        today = date.today()
+        today = today_jakarta()
         
         if period == 'today':
             start_date = today
@@ -188,7 +189,7 @@ class TransactionService:
         Returns:
             Date object or None if parsing failed
         """
-        today = date.today()
+        today = today_jakarta()
         date_str = date_str.lower().strip()
         
         if date_str in ['today', 'hari ini', 'sekarang']:

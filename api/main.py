@@ -16,6 +16,7 @@ from models.transaction import Transaction
 from services.category_service import CategoryService
 from services.report_service import ReportService
 from services.transaction_service import TransactionService
+from utils.datetime_utils import today_jakarta
 from utils.validators import Validator
 
 
@@ -116,7 +117,7 @@ def _parse_date(d: Optional[str]) -> Optional[date]:
 
 
 def _default_date_range():
-    end = date.today()
+    end = today_jakarta()
     start = end - timedelta(days=30)
     return start, end
 
@@ -226,4 +227,3 @@ def delete_transaction(transaction_id: int, user=Depends(get_current_user)):
 _miniapp_dir = Path(__file__).resolve().parents[1] / "miniapp"
 if _miniapp_dir.exists():
     app.mount("/", StaticFiles(directory=str(_miniapp_dir), html=True), name="miniapp")
-

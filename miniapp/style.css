@@ -698,6 +698,42 @@ input::placeholder { color: rgba(255,255,255,0.45); }
 .tx-amount.income { color: rgba(32, 211, 162, 0.95); }
 .tx-amount.expense { color: rgba(255, 92, 115, 0.95); }
 .tx-meta { font-size: 12px; color: var(--muted); }
+.cat-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+.cat-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.82);
+}
+.cat-icon svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+.cat-icon-food { color: #ffb26b; }
+.cat-icon-subscription { color: #9fc3ff; }
+.cat-icon-transport { color: #7ad6ff; }
+.cat-icon-entertainment { color: #c6a9ff; }
+.cat-icon-shopping { color: #ffd57a; }
+.cat-icon-salary,
+.cat-icon-income { color: #20d3a2; }
+.cat-icon-health { color: #ff8f9f; }
+.cat-icon-education { color: #9ee6ff; }
+.cat-icon-bill { color: #f7c27f; }
+.cat-icon-gift { color: #ffb0c6; }
+.cat-icon-investment { color: #8cf0bf; }
+.cat-name { color: var(--muted); }
+.cat-fallback { color: var(--muted); }
 
 .hint { font-size: 12px; color: var(--muted); line-height: 1.35; }
 code { color: rgba(255,255,255,0.85); }

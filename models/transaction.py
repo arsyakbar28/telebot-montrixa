@@ -3,6 +3,7 @@
 from typing import Optional, Dict, Any, List
 from datetime import datetime, date, timedelta
 from config.database import DatabaseConnection
+from utils.datetime_utils import today_jakarta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -71,7 +72,7 @@ class Transaction:
             Transaction instance or None if creation failed
         """
         if transaction_date is None:
-            transaction_date = date.today()
+            transaction_date = today_jakarta()
         
         query = """
             INSERT INTO transactions 
@@ -185,7 +186,7 @@ class Transaction:
         Returns:
             List of Transaction instances
         """
-        today = date.today()
+        today = today_jakarta()
         return Transaction.get_by_user(user_id, start_date=today, end_date=today, limit=100)
     
     @staticmethod
