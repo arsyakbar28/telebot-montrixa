@@ -73,11 +73,20 @@ async def error_callback(update: Update, context) -> None:
 
 async def post_init_set_menu_button(application: Application) -> None:
     """Set chat menu button to open Mini App (tombol 'Open' di samping lampiran)."""
-    if Settings.MINIAPP_URL:
+    if not Settings.MINIAPP_URL:
+        logger.warning("MINIAPP_URL kosong - Menu Button tidak diset. Isi .env lalu restart bot.")
+        return
+    url = Settings.MINIAPP_URL.strip()
+    if not url.startswith("https://"):
+        logger.warning("MINIAPP_URL harus HTTPS. Menu Button tidak diset.")
+        return
+    try:
         await application.bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(text="Open", web_app=WebAppInfo(url=Settings.MINIAPP_URL))
+            menu_button=MenuButtonWebApp(text="Open", web_app=WebAppInfo(url=url))
         )
-        logger.info("Menu button (Open) set to Mini App: %s", Settings.MINIAPP_URL)
+        logger.info("Menu button (Open) set ke Mini App: %s", url)
+    except Exception as e:
+        logger.error("Gagal set Menu Button: %s", e, exc_info=True)
 
 
 def main():
