@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from telegram import Update
+from telegram import Update, MenuButtonWebApp, WebAppInfo
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -71,6 +71,15 @@ async def error_callback(update: Update, context) -> None:
     logger.error(f"Update {update} caused error {context.error}", exc_info=context.error)
 
 
+async def post_init_set_menu_button(application: Application) -> None:
+    """Set chat menu button to open Mini App (tombol 'Open' di samping lampiran)."""
+    if Settings.MINIAPP_URL:
+        await application.bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(text="Open", web_app=WebAppInfo(url=Settings.MINIAPP_URL))
+        )
+        logger.info("Menu button (Open) set to Mini App: %s", Settings.MINIAPP_URL)
+
+
 def main():
     """Start the bot."""
     # Validate settings
@@ -83,8 +92,13 @@ def main():
     
     logger.info("Starting Montrixa Bot...")
     
-    # Create application
-    application = Application.builder().token(Settings.TELEGRAM_BOT_TOKEN).build()
+    # Create application (post_init = set Menu Button "Open" seperti BotFather)
+    application = (
+        Application.builder()
+        .token(Settings.TELEGRAM_BOT_TOKEN)
+        .post_init(post_init_set_menu_button)
+        .build()
+    )
     
     # Register command handlers
     application.add_handler(CommandHandler("start", start_command))
