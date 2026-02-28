@@ -147,18 +147,21 @@ function showView(viewId) {
   if (appEl) appEl.classList.toggle("show-add", isAdd);
 }
 
-function switchTab(tab) {
+function switchTab(tab, options = {}) {
+  const { skipRefresh = false } = options;
   currentTab = tab;
   if (tab === "home") {
     showView("viewHome");
-    loadBalance().catch(() => {});
-    loadLast5().catch(() => {});
+    if (!skipRefresh) {
+      loadBalance().catch(() => {});
+      loadLast5().catch(() => {});
+    }
   } else if (tab === "analytic") {
     showView("viewAnalytic");
-    loadAnalytics().catch(() => {});
+    if (!skipRefresh) loadAnalytics().catch(() => {});
   } else if (tab === "transaction") {
     showView("viewTransaction");
-    loadTransactionList().catch(() => {});
+    if (!skipRefresh) loadTransactionList().catch(() => {});
   }
 }
 
@@ -180,7 +183,8 @@ function openAddTransaction(type) {
 }
 
 function closeAddTransaction() {
-  switchTab("home");
+  // Jangan refetch: data sudah di-refresh setelah simpan; refetch bisa dapat cache lama dan timpa list.
+  switchTab("home", { skipRefresh: true });
 }
 
 async function loadBalance() {
@@ -214,7 +218,8 @@ async function loadLast5() {
   start.setFullYear(start.getFullYear() - 1);
   const startStr = start.toISOString().slice(0, 10);
   const endStr = end.toISOString().slice(0, 10);
-  const data = await apiFetch(`/api/transactions?start=${startStr}&end=${endStr}&limit=5&offset=0`);
+  const cacheBust = Date.now();
+  const data = await apiFetch(`/api/transactions?start=${startStr}&end=${endStr}&limit=5&offset=0&_=${cacheBust}`);
   renderTxList(lastTxList, data.transactions || [], true, "Belum ada transaksi.");
 }
 
