@@ -126,7 +126,7 @@ function renderTxItem(t) {
   const cat = `${t.category_icon || ""} ${t.category_name || ""}`.trim();
   const dateStr = t.transaction_date ? String(t.transaction_date).slice(0, 10) : "";
   const desc = (t.description || "-").toString();
-  const id = t.id != null ? t.id : "";
+  const id = t.id != null ? String(t.id) : "";
   return `
     <div class="tx" data-id="${id}" role="button" tabindex="0">
       <div class="tx-top">
@@ -556,11 +556,11 @@ function init() {
     mainEl.addEventListener("click", (e) => {
       const row = e.target.closest(".tx[data-id]");
       if (!row) return;
-      const id = parseInt(row.getAttribute("data-id"), 10);
-      if (Number.isNaN(id)) return;
+      const id = (row.getAttribute("data-id") || "").trim();
+      if (!id) return;
       const inLast = lastTxList && lastTxList.contains(row);
       const items = inLast ? lastTxData : txListData;
-      const tx = items.find((t) => t.id === id);
+      const tx = items.find((t) => String(t.id) === id);
       if (tx) openTxDetail(tx);
     });
   }
