@@ -74,7 +74,7 @@ const TX_PAGE_SIZE = 10;
 let txTotal = 0;
 let chartInstance = null;
 
-const PRESET_DAYS = { 7: 7, 30: 30, 0: "month" };
+const PRESET_DAYS = { 7: 7, 30: 30 };
 
 function setStatus(msg, kind = "muted") {
   if (!statusText) return;
@@ -606,10 +606,22 @@ async function onSubmit(e) {
   }
 }
 
-function setDefaultDateRange() {
+async function setDefaultDateRange() {
   const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - 30);
+  let start = new Date();
+  try {
+    const meta = await apiFetch("/api/transactions/meta");
+    if (meta && meta.oldest_date) {
+      const oldest = new Date(`${meta.oldest_date}T00:00:00`);
+      if (!Number.isNaN(oldest.getTime())) start = oldest;
+      else start.setDate(start.getDate() - 30);
+    } else {
+      start.setDate(start.getDate() - 30);
+    }
+  } catch (_) {
+    start.setDate(start.getDate() - 30);
+  }
+  if (start > end) start = new Date(end);
   if (filterStart) filterStart.value = formatLocalDateISO(start);
   if (filterEnd) filterEnd.value = formatLocalDateISO(end);
 }
@@ -716,6 +728,20 @@ function init() {
   if (analyticTypeIncome) analyticTypeIncome.addEventListener("click", () => setAnalyticType("income"));
   if (analyticTypeExpense) analyticTypeExpense.addEventListener("click", () => setAnalyticType("expense"));
 
+  document.querySelectorAll(".preset-buttons button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const days = parseInt(btn.getAttribute("data-days"), 10);
+      if (!PRESET_DAYS[days]) return;
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - days);
+      if (filterStart) filterStart.value = formatLocalDateISO(start);
+      if (filterEnd) filterEnd.value = formatLocalDateISO(end);
+      txPage = 0;
+      loadTransactionList().catch(() => {});
+    });
+  });
+
   if (filterStart && filterEnd) {
     filterStart.addEventListener("change", () => { txPage = 0; loadTransactionList().catch(() => {}); });
     filterEnd.addEventListener("change", () => { txPage = 0; loadTransactionList().catch(() => {}); });
@@ -729,8 +755,8 @@ function init() {
 
   if (txForm) txForm.addEventListener("submit", onSubmit);
 
-  setDefaultDateRange();
-  Promise.all([loadBalance(), loadLast5()])
+  setDefaultDateRange()
+    .then(() => Promise.all([loadBalance(), loadLast5()]))
     .then(() => setStatus(""))
     .catch((e) => setStatus(e.message, "err"));
 }

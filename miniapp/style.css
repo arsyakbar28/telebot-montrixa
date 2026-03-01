@@ -614,38 +614,45 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   margin-bottom: 10px;
 }
 .card-filter-compact {
-  padding: 12px;
+  padding: 10px 12px;
 }
 .card-filter-compact .card-title {
+  margin-bottom: 6px;
+}
+.date-inline-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
 }
-.card-filter-compact .date-filters {
-  gap: 8px;
-  margin-bottom: 0;
+.date-inline-label,
+.date-inline-sep {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
 }
 .card-filter-compact .field {
-  gap: 4px;
+  min-width: 0;
 }
-.card-filter-compact .label {
-  font-size: 11px;
-}
-.card-filter-compact input[type="date"] {
-  min-height: 38px;
-  padding: 8px 10px;
-  font-size: 14px;
+.card-filter-compact .field input[type="date"] {
+  min-height: 34px;
+  padding: 6px 8px;
+  font-size: 13px;
+  border-radius: 10px;
 }
 .preset-buttons {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .preset-buttons button {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: rgba(0, 0, 0, 0.18);
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
 }
 .preset-buttons button:hover, .preset-buttons button:focus {

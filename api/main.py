@@ -163,6 +163,17 @@ def get_transactions(
     }
 
 
+@app.get("/api/transactions/meta")
+def get_transactions_meta(user=Depends(get_current_user)):
+    bounds = Transaction.get_date_bounds(user.id)
+    oldest = bounds.get("oldest_date")
+    newest = bounds.get("newest_date")
+    return {
+        "oldest_date": oldest.isoformat() if hasattr(oldest, "isoformat") and oldest else None,
+        "newest_date": newest.isoformat() if hasattr(newest, "isoformat") and newest else None,
+    }
+
+
 @app.post("/api/transaction")
 def create_transaction(payload: TransactionCreateRequest, user=Depends(get_current_user)):
     is_valid, amount, err = Validator.validate_amount(payload.amount)

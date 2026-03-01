@@ -347,3 +347,19 @@ class Transaction:
         result = DatabaseConnection.execute_query(query, (user_id,), fetch_one=True, commit=False)
         
         return result['count'] if result else 0
+
+    @staticmethod
+    def get_date_bounds(user_id: int) -> Dict[str, Optional[date]]:
+        """Get oldest and newest transaction dates for a user."""
+        query = """
+            SELECT
+                MIN(transaction_date) AS oldest_date,
+                MAX(transaction_date) AS newest_date
+            FROM transactions
+            WHERE user_id = %s
+        """
+        result = DatabaseConnection.execute_query(query, (user_id,), fetch_one=True, commit=False) or {}
+        return {
+            "oldest_date": result.get("oldest_date"),
+            "newest_date": result.get("newest_date"),
+        }
