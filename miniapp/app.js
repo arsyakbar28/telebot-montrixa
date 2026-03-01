@@ -118,8 +118,8 @@ function formatDate(str) {
 function formatDetailDateTime(tx) {
   if (!tx) return "-";
   const months = [
-    "januari", "februari", "maret", "april", "mei", "juni",
-    "juli", "agustus", "september", "oktober", "november", "desember",
+    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+    "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
   ];
   const baseDate = String(tx.transaction_date || "").slice(0, 10);
   if (!baseDate) return "-";
@@ -144,8 +144,9 @@ function formatDetailDateTime(tx) {
     }
   }
 
-  const dateText = `${d} ${months[m - 1]} ${y}`;
-  return timeText ? `${dateText}, ${timeText}` : dateText;
+  const dayText = String(d).padStart(2, "0");
+  const dateText = `${dayText} ${months[m - 1]} ${y}`;
+  return timeText ? `${dateText} ・ ${timeText}` : dateText;
 }
 
 function formatPct(n) {
