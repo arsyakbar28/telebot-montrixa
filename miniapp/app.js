@@ -607,7 +607,7 @@ async function onSubmit(e) {
 }
 
 async function setDefaultDateRange() {
-  const end = new Date();
+  let end = new Date();
   let start = new Date();
   try {
     const meta = await apiFetch("/api/transactions/meta");
@@ -617,6 +617,10 @@ async function setDefaultDateRange() {
       else start.setDate(start.getDate() - 30);
     } else {
       start.setDate(start.getDate() - 30);
+    }
+    if (meta && meta.newest_date) {
+      const newest = new Date(`${meta.newest_date}T00:00:00`);
+      if (!Number.isNaN(newest.getTime())) end = newest;
     }
   } catch (_) {
     start.setDate(start.getDate() - 30);
