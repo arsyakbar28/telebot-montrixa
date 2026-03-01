@@ -85,6 +85,9 @@ class DatabaseConnection:
             yield cursor
             if commit:
                 conn.commit()
+            else:
+                # End read-only transaction so pooled connections do not keep stale snapshots.
+                conn.rollback()
         except Exception as e:
             conn.rollback()
             logger.error(f"Database error: {e}")
