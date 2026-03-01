@@ -115,6 +115,39 @@ function formatDate(str) {
   return `${d}/${m}/${y}`;
 }
 
+function formatDetailDateTime(tx) {
+  if (!tx) return "-";
+  const months = [
+    "januari", "februari", "maret", "april", "mei", "juni",
+    "juli", "agustus", "september", "oktober", "november", "desember",
+  ];
+  const baseDate = String(tx.transaction_date || "").slice(0, 10);
+  if (!baseDate) return "-";
+  const parts = baseDate.split("-");
+  if (parts.length !== 3) return "-";
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (!y || !m || !d || m < 1 || m > 12) return "-";
+
+  let timeText = "";
+  const timeSource = tx.created_at || tx.updated_at || "";
+  if (timeSource) {
+    const dt = new Date(timeSource);
+    if (!Number.isNaN(dt.getTime())) {
+      const hh = String(dt.getHours()).padStart(2, "0");
+      const mm = String(dt.getMinutes()).padStart(2, "0");
+      timeText = `${hh}.${mm}`;
+    } else {
+      const match = String(timeSource).match(/(\d{2}):(\d{2})/);
+      if (match) timeText = `${match[1]}.${match[2]}`;
+    }
+  }
+
+  const dateText = `${d} ${months[m - 1]} ${y}`;
+  return timeText ? `${dateText}, ${timeText}` : dateText;
+}
+
 function formatPct(n) {
   return fmt.format(Number(n || 0)) + "%";
 }
@@ -286,8 +319,7 @@ function closeAddTransaction() {
 
 function fillTxDetail(tx) {
   if (!tx) return;
-  const dateStr = tx.transaction_date ? String(tx.transaction_date).slice(0, 10) : "";
-  if (detailDate) detailDate.textContent = formatDate(dateStr) || "-";
+  if (detailDate) detailDate.textContent = formatDetailDateTime(tx);
   if (detailType) detailType.textContent = tx.type === "income" ? "Pemasukan" : "Pengeluaran";
   if (detailCategory) detailCategory.innerHTML = renderCategoryLabel(tx.category_icon, tx.category_name, tx.type);
   if (detailAmount) {
@@ -626,18 +658,35 @@ function init() {
     });
   }
 
+  function handleTxRowClick(row) {
+    if (!row) return;
+    const id = (row.getAttribute("data-id") || "").trim();
+    if (!id) return;
+    const inLast = lastTxList && lastTxList.contains(row);
+    const items = inLast ? lastTxData : txListData;
+    const tx = items.find((t) => String(t.id) === id);
+    if (tx) openTxDetail(tx);
+  }
+
   const mainEl = document.querySelector(".main");
   if (mainEl) {
     mainEl.addEventListener("click", (e) => {
-      const row = e.target.closest(".tx[data-id]");
+      const row = e.target.closest(".tx");
+      handleTxRowClick(row);
+    });
+    mainEl.addEventListener("touchend", (e) => {
+      const row = e.target.closest(".tx");
       if (!row) return;
       const id = (row.getAttribute("data-id") || "").trim();
       if (!id) return;
       const inLast = lastTxList && lastTxList.contains(row);
       const items = inLast ? lastTxData : txListData;
       const tx = items.find((t) => String(t.id) === id);
-      if (tx) openTxDetail(tx);
-    });
+      if (tx) {
+        e.preventDefault();
+        openTxDetail(tx);
+      }
+    }, { passive: false });
   }
 
   if (linkSeeAll) {
