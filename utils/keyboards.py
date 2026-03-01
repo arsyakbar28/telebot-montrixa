@@ -9,6 +9,7 @@ from telegram import (
 )
 from typing import List, Any
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+import time
 from config.settings import Settings
 
 
@@ -23,8 +24,8 @@ class Keyboards:
             return ""
         parsed = urlparse(base_url)
         query = dict(parse_qsl(parsed.query, keep_blank_values=True))
-        # Use a deterministic version marker per app version/date; easy to bump when needed.
-        query["v"] = "20260301"
+        # Telegram iOS WebView can keep stale cache; use rolling version token to force fresh fetch.
+        query["v"] = str(int(time.time()))
         new_query = urlencode(query)
         return urlunparse(parsed._replace(query=new_query))
     
