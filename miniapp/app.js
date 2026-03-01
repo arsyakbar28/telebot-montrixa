@@ -703,19 +703,6 @@ function init() {
       const row = e.target.closest(".tx");
       handleTxRowClick(row);
     });
-    mainEl.addEventListener("touchend", (e) => {
-      const row = e.target.closest(".tx");
-      if (!row) return;
-      const id = (row.getAttribute("data-id") || "").trim();
-      if (!id) return;
-      const inLast = lastTxList && lastTxList.contains(row);
-      const items = inLast ? lastTxData : txListData;
-      const tx = items.find((t) => String(t.id) === id);
-      if (tx) {
-        e.preventDefault();
-        openTxDetail(tx);
-      }
-    }, { passive: false });
   }
 
   if (linkSeeAll) {

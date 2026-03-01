@@ -621,7 +621,7 @@ input::placeholder { color: rgba(255,255,255,0.45); }
 }
 .date-inline-row {
   display: grid;
-  grid-template-columns: auto 1fr auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
@@ -636,9 +636,10 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   min-width: 0;
 }
 .card-filter-compact .field input[type="date"] {
-  min-height: 34px;
+  width: 100%;
+  min-height: 36px;
   padding: 6px 8px;
-  font-size: 13px;
+  font-size: 12px;
   border-radius: 10px;
 }
 .preset-buttons {
@@ -658,6 +659,21 @@ input::placeholder { color: rgba(255,255,255,0.45); }
 .preset-buttons button:hover, .preset-buttons button:focus {
   background: rgba(79, 140, 255, 0.15);
   border-color: rgba(79, 140, 255, 0.4);
+}
+
+@media (max-width: 560px) {
+  .date-inline-row {
+    gap: 6px;
+  }
+  .date-inline-label,
+  .date-inline-sep {
+    font-size: 11px;
+  }
+  .card-filter-compact .field input[type="date"] {
+    font-size: 11px;
+    min-height: 34px;
+    padding: 5px 7px;
+  }
 }
 
 /* Chart */
