@@ -147,6 +147,15 @@ body {
 .metric-label { font-size: 11px; color: var(--muted); }
 .metric-value { margin-top: 6px; font-size: 15px; font-weight: 700; }
 
+.card-tx-summary .metric {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--line);
+}
+.card-tx-summary .metric-income { border-color: rgba(32, 211, 162, 0.25); }
+.card-tx-summary .metric-expense { border-color: rgba(255, 92, 115, 0.25); }
+
 /* Card: Income/Expense actions – selalu kiri-kanan */
 .card-actions .action-buttons {
   display: grid;
@@ -603,6 +612,27 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-bottom: 10px;
+}
+.card-filter-compact {
+  padding: 12px;
+}
+.card-filter-compact .card-title {
+  margin-bottom: 8px;
+}
+.card-filter-compact .date-filters {
+  gap: 8px;
+  margin-bottom: 0;
+}
+.card-filter-compact .field {
+  gap: 4px;
+}
+.card-filter-compact .label {
+  font-size: 11px;
+}
+.card-filter-compact input[type="date"] {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 14px;
 }
 .preset-buttons {
   display: flex;

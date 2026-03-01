@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Montrixa</title>
-    <link rel="stylesheet" href="./style.css?v=20260301-2" />
+    <link rel="stylesheet" href="./style.css?v=20260301-3" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -88,7 +88,21 @@
 
         <!-- View: Transaction -->
         <div id="viewTransaction" class="view">
-          <section class="card">
+          <section class="card card-tx-summary">
+            <div class="card-title">Ringkasan Periode</div>
+            <div class="balance-row">
+              <div class="metric metric-income">
+                <div class="metric-label">Pemasukan</div>
+                <div id="txIncomeVal" class="metric-value">-</div>
+              </div>
+              <div class="metric metric-expense">
+                <div class="metric-label">Pengeluaran</div>
+                <div id="txExpenseVal" class="metric-value">-</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card card-filter-compact">
             <div class="card-title">Filter Tanggal</div>
             <div class="date-filters">
               <label class="field">
@@ -99,11 +113,6 @@
                 <span class="label">Sampai</span>
                 <input type="date" id="filterEnd" />
               </label>
-            </div>
-            <div class="preset-buttons">
-              <button type="button" data-days="7">7 hari</button>
-              <button type="button" data-days="30">30 hari</button>
-              <button type="button" data-days="0">Bulan ini</button>
             </div>
           </section>
 
@@ -242,6 +251,6 @@
       </section>
     </div>
 
-    <script src="./app.js?v=20260301-2"></script>
+    <script src="./app.js?v=20260301-3"></script>
   </body>
 </html>

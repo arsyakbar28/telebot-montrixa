@@ -17,6 +17,8 @@ const txList = $("txList");
 const txListEmpty = $("txListEmpty");
 const txCount = $("txCount");
 const txPagination = $("txPagination");
+const txIncomeVal = $("txIncomeVal");
+const txExpenseVal = $("txExpenseVal");
 const linkSeeAll = $("linkSeeAll");
 
 const incomeVal = $("incomeVal");
@@ -349,10 +351,17 @@ async function loadBalance() {
   if (incomeVal) incomeVal.textContent = "…";
   if (expenseVal) expenseVal.textContent = "…";
   if (balanceVal) balanceVal.textContent = "…";
-  const b = await apiFetch("/api/balance");
-  if (incomeVal) incomeVal.textContent = formatRp(b.income);
-  if (expenseVal) expenseVal.textContent = formatRp(b.expense);
-  if (balanceVal) balanceVal.textContent = formatRp(b.balance);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const start = formatLocalDateISO(monthStart);
+  const end = formatLocalDateISO(now);
+  const [overall, monthly] = await Promise.all([
+    apiFetch("/api/balance"),
+    apiFetch(`/api/balance?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
+  ]);
+  if (incomeVal) incomeVal.textContent = formatRp(monthly.income);
+  if (expenseVal) expenseVal.textContent = formatRp(monthly.expense);
+  if (balanceVal) balanceVal.textContent = formatRp(overall.balance);
 }
 
 async function loadCategories() {
@@ -401,13 +410,20 @@ async function loadTransactionList() {
   const { start, end } = getDateRange();
   if (txList) txList.innerHTML = `<div class="hint">Memuat…</div>`;
   if (txListEmpty) txListEmpty.hidden = true;
+  if (txIncomeVal) txIncomeVal.textContent = "…";
+  if (txExpenseVal) txExpenseVal.textContent = "…";
   const offset = txPage * TX_PAGE_SIZE;
-  const data = await apiFetch(
-    `/api/transactions?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${TX_PAGE_SIZE}&offset=${offset}`
-  );
+  const [data, summary] = await Promise.all([
+    apiFetch(
+      `/api/transactions?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&limit=${TX_PAGE_SIZE}&offset=${offset}`
+    ),
+    apiFetch(`/api/balance?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`),
+  ]);
   const list = data.transactions || [];
   txTotal = data.total ?? 0;
   txListData = list;
+  if (txIncomeVal) txIncomeVal.textContent = formatRp(summary.income);
+  if (txExpenseVal) txExpenseVal.textContent = formatRp(summary.expense);
 
   if (txList) renderTxList(txList, list, false);
   if (txListEmpty) {
@@ -699,25 +715,6 @@ function init() {
 
   if (analyticTypeIncome) analyticTypeIncome.addEventListener("click", () => setAnalyticType("income"));
   if (analyticTypeExpense) analyticTypeExpense.addEventListener("click", () => setAnalyticType("expense"));
-
-  document.querySelectorAll(".preset-buttons button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const days = parseInt(btn.getAttribute("data-days"), 10);
-      const end = new Date();
-      const start = new Date();
-      if (days === 0) {
-        start.setDate(1);
-        if (filterEnd) filterEnd.value = formatLocalDateISO(end);
-        if (filterStart) filterStart.value = formatLocalDateISO(start);
-      } else {
-        start.setDate(start.getDate() - days);
-        if (filterStart) filterStart.value = formatLocalDateISO(start);
-        if (filterEnd) filterEnd.value = formatLocalDateISO(end);
-      }
-      txPage = 0;
-      loadTransactionList().catch(() => {});
-    });
-  });
 
   if (filterStart && filterEnd) {
     filterStart.addEventListener("change", () => { txPage = 0; loadTransactionList().catch(() => {}); });

@@ -66,8 +66,14 @@ def get_categories(
 
 
 @app.get("/api/balance")
-def get_balance(user=Depends(get_current_user)):
-    return TransactionService.get_balance(user.id)
+def get_balance(
+    start: Optional[str] = Query(default=None, description="Start date YYYY-MM-DD"),
+    end: Optional[str] = Query(default=None, description="End date YYYY-MM-DD"),
+    user=Depends(get_current_user),
+):
+    start_date = _parse_date(start)
+    end_date = _parse_date(end)
+    return TransactionService.get_balance(user.id, start_date=start_date, end_date=end_date)
 
 
 @app.get("/api/analytics")
