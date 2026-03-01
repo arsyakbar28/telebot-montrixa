@@ -620,22 +620,23 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   margin-bottom: 6px;
 }
 .date-inline-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
 }
-.date-inline-label,
 .date-inline-sep {
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
+  flex: 0 0 auto;
+  width: 20px;
+  text-align: center;
 }
-.card-filter-compact .field {
+.date-inline-input {
+  flex: 1 1 0;
   min-width: 0;
-}
-.card-filter-compact .field input[type="date"] {
   width: 100%;
   min-height: 36px;
   padding: 6px 8px;
@@ -665,11 +666,11 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   .date-inline-row {
     gap: 6px;
   }
-  .date-inline-label,
   .date-inline-sep {
     font-size: 11px;
+    width: 16px;
   }
-  .card-filter-compact .field input[type="date"] {
+  .date-inline-input {
     font-size: 11px;
     min-height: 34px;
     padding: 5px 7px;
