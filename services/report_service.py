@@ -2,8 +2,8 @@
 
 from typing import Dict, Any, List, Optional
 from datetime import date, datetime, timedelta
-from models.transaction import Transaction
 from config.database import DatabaseConnection
+from services.transaction_service import TransactionService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,24 +11,22 @@ logger = logging.getLogger(__name__)
 
 class ReportService:
     """Service for generating reports and analytics."""
-    
+
     @staticmethod
     def get_summary(user_id: int, start_date: date, end_date: date) -> Dict[str, Any]:
         """Get financial summary for a date range.
-        
+
         Args:
             user_id: User ID
             start_date: Start date
             end_date: End date
-            
+
         Returns:
             Dictionary with summary data
         """
-        # Get balance
-        balance_data = Transaction.get_balance(user_id, start_date, end_date)
-        
-        # Get transaction count
-        transactions = Transaction.get_by_date_range(user_id, start_date, end_date)
+        # Get balance and transactions via TransactionService
+        balance_data = TransactionService.get_balance(user_id, start_date, end_date)
+        transactions = TransactionService.get_by_date_range(user_id, start_date, end_date)
         
         return {
             'start_date': start_date,
@@ -243,7 +241,7 @@ class ReportService:
         Returns:
             CSV string
         """
-        transactions = Transaction.get_by_date_range(user_id, start_date, end_date)
+        transactions = TransactionService.get_by_date_range(user_id, start_date, end_date)
         
         # Build CSV
         csv_lines = [

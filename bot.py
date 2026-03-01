@@ -36,7 +36,7 @@ from handlers.budget_handler import (
 )
 from handlers.recurring_handler import recurring_command, add_recurring_command
 from handlers.report_handler import summary_command, report_command, export_command
-from handlers.callback_handler import (
+from handlers.callbacks import (
     handle_category_selection,
     handle_cancel,
     handle_menu_callbacks,

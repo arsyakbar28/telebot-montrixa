@@ -168,16 +168,30 @@ class TransactionService:
     def get_balance(user_id: int, start_date: Optional[date] = None,
                    end_date: Optional[date] = None) -> Dict[str, float]:
         """Get balance for a user.
-        
+
         Args:
             user_id: User ID
             start_date: Optional start date filter
             end_date: Optional end date filter
-            
+
         Returns:
             Dictionary with income, expense, and balance
         """
         return Transaction.get_balance(user_id, start_date, end_date)
+
+    @staticmethod
+    def get_by_date_range(user_id: int, start_date: date, end_date: date) -> List[Transaction]:
+        """Get transactions within date range.
+
+        Args:
+            user_id: User ID
+            start_date: Start date
+            end_date: End date
+
+        Returns:
+            List of Transaction instances
+        """
+        return Transaction.get_by_date_range(user_id, start_date, end_date)
     
     @staticmethod
     def parse_date_string(date_str: str) -> Optional[date]:

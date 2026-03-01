@@ -1,3 +1,4 @@
+/* ===== Variables & base ===== */
 :root {
   --bg: #0b1220;
   --card: rgba(255, 255, 255, 0.06);
@@ -24,6 +25,7 @@ body {
   color: var(--text);
 }
 
+/* ===== Layout (app, header, main) ===== */
 .app {
   width: 100%;
   max-width: 740px;
@@ -84,6 +86,7 @@ body {
   padding-bottom: 0;
 }
 
+/* ===== Cards & buttons ===== */
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -113,7 +116,7 @@ body {
   gap: 10px;
 }
 
-/* Saldo: besar di atas, Pemasukan & Pengeluaran kiri-kanan */
+/* ===== View: Home (balance, actions, last 5) ===== */
 .card-balance .balance-hero {
   text-align: center;
   padding: 16px 0 20px;
@@ -330,7 +333,7 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   cursor: not-allowed;
 }
 
-/* ---------- Tambah Transaksi: layout & banner ---------- */
+/* ===== View: Add Tx (form) ===== */
 .view-add-tx {
   padding-top: 0;
   /* Background solid agar tidak tembus gradient body (hindari pita warna kontras) */
@@ -524,7 +527,7 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   font-size: 13px;
 }
 
-/* ---------- Detail Transaksi ---------- */
+/* ===== View: Tx Detail ===== */
 .view-tx-detail {
   background: var(--bg);
 }
@@ -606,7 +609,7 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   font-weight: 700;
 }
 
-/* Date filters */
+/* ===== View: Transaction (filter, list .tx) ===== */
 .date-filters {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -677,7 +680,7 @@ input::placeholder { color: rgba(255,255,255,0.45); }
   }
 }
 
-/* Chart */
+/* ===== View: Analytic (chart, breakdown) ===== */
 .chart-wrap {
   position: relative;
   height: 220px;
@@ -819,7 +822,7 @@ code { color: rgba(255,255,255,0.85); }
   color: var(--muted);
 }
 
-/* Bottom nav – penuh sampai bawah layar inkl. safe area */
+/* ===== Nav & responsive ===== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
