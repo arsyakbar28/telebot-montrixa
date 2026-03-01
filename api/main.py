@@ -31,6 +31,17 @@ app.add_middleware(
 )
 
 
+class NoCacheStaticFiles(StaticFiles):
+    """Static files with no-store headers to avoid stale Telegram WebView cache."""
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+
 @app.get("/api/health")
 def health():
     return {"ok": True}
@@ -226,4 +237,4 @@ def delete_transaction(transaction_id: int, user=Depends(get_current_user)):
 # Serve Mini App static files (optional, for same-origin hosting)
 _miniapp_dir = Path(__file__).resolve().parents[1] / "miniapp"
 if _miniapp_dir.exists():
-    app.mount("/", StaticFiles(directory=str(_miniapp_dir), html=True), name="miniapp")
+    app.mount("/", NoCacheStaticFiles(directory=str(_miniapp_dir), html=True), name="miniapp")

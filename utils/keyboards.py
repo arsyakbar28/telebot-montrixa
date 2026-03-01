@@ -8,11 +8,25 @@ from telegram import (
     WebAppInfo,
 )
 from typing import List, Any
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 from config.settings import Settings
 
 
 class Keyboards:
     """Utility class for creating keyboard layouts."""
+
+    @staticmethod
+    def _miniapp_url_with_version() -> str:
+        """Append/update cache-busting version param for Mini App URL."""
+        base_url = (Settings.MINIAPP_URL or "").strip()
+        if not base_url:
+            return ""
+        parsed = urlparse(base_url)
+        query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        # Use a deterministic version marker per app version/date; easy to bump when needed.
+        query["v"] = "20260301"
+        new_query = urlencode(query)
+        return urlunparse(parsed._replace(query=new_query))
     
     @staticmethod
     def main_menu() -> InlineKeyboardMarkup:
@@ -25,7 +39,7 @@ class Keyboards:
 
         if Settings.MINIAPP_URL:
             keyboard.append(
-                [InlineKeyboardButton("Buka App", web_app=WebAppInfo(url=Settings.MINIAPP_URL))]
+                [InlineKeyboardButton("Buka App", web_app=WebAppInfo(url=Keyboards._miniapp_url_with_version()))]
             )
 
         keyboard += [
